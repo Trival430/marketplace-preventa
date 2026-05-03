@@ -1,34 +1,54 @@
-// Importaciones
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+
+// Models
 const Producto = require("./models/Producto");
 
-// Inicialización
+// Routes
+const authRoutes = require("./routes/auth");
+
 const app = express();
 const PORT = 3000;
 
-// Middlewares
+/* ======================
+      MIDDLEWARES
+====================== */
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // 👈 OBLIGATORIO para login
 
-// Conexión a MongoDB
-const URI = "mongodb+srv://admin:Admin123@cluster2.edeki7g.mongodb.net/marketplace?retryWrites=true&w=majority";
+/* ======================
+      RUTAS AUTH
+====================== */
+app.use("/api/auth", authRoutes);
 
-mongoose.connect(URI)
+/* ======================
+      MONGODB
+====================== */
+const URI =
+  "mongodb+srv://admin:Admin123@cluster2.edeki7g.mongodb.net/marketplace?retryWrites=true&w=majority";
+
+mongoose
+  .connect(URI)
   .then(() => console.log("✅ Conectado a MongoDB"))
-  .catch((error) => {
-    console.error("❌ Error de conexión:", error.message);
-  });
+  .catch((error) =>
+    console.error("❌ Error de conexión:", error.message)
+  );
 
-/* ================= RUTAS ================= */
+/* ======================
+      RUTAS API
+====================== */
 
 // Ruta base
 app.get("/api", (req, res) => {
   res.send("API funcionando 🚀");
 });
 
-// Obtener todos los productos
+/* ======================
+      PRODUCTOS
+====================== */
+
+// Obtener productos
 app.get("/api/productos", async (req, res) => {
   try {
     const productos = await Producto.find();
@@ -38,7 +58,7 @@ app.get("/api/productos", async (req, res) => {
   }
 });
 
-// Crear un nuevo producto
+// Crear producto
 app.post("/api/productos", async (req, res) => {
   try {
     const producto = new Producto(req.body);
@@ -49,7 +69,7 @@ app.post("/api/productos", async (req, res) => {
   }
 });
 
-// Reservar producto (incrementar vendidos)
+// Reservar producto
 app.put("/api/productos/:id/reservar", async (req, res) => {
   try {
     const producto = await Producto.findById(req.params.id);
@@ -67,8 +87,9 @@ app.put("/api/productos/:id/reservar", async (req, res) => {
   }
 });
 
-/* ================= SERVIDOR ================= */
-
+/* ======================
+      SERVIDOR
+====================== */
 app.listen(PORT, () => {
   console.log(`🚀 Servidor activo en http://localhost:${PORT}`);
 });
