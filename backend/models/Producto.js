@@ -7,6 +7,14 @@ const productoSchema = new mongoose.Schema({
   vendidos: {
     type: Number,
     default: 0
+  },
+  categoria: {
+    type: String,
+    default: "General"
+  },
+  imagen: {
+    type: String,
+    default: ""
   }
 });
 

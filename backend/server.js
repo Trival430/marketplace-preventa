@@ -15,7 +15,7 @@ const PORT = 3000;
       MIDDLEWARES
 ====================== */
 app.use(cors());
-app.use(express.json()); // 👈 OBLIGATORIO para login
+app.use(express.json());
 
 /* ======================
       RUTAS AUTH
@@ -36,29 +36,59 @@ mongoose
   );
 
 /* ======================
-      RUTAS API
+      RUTA BASE
 ====================== */
-
-// Ruta base
 app.get("/api", (req, res) => {
   res.send("API funcionando 🚀");
 });
 
 /* ======================
-      PRODUCTOS
+      CATÁLOGO PRODUCTOS 🔥
 ====================== */
-
-// Obtener productos
 app.get("/api/productos", async (req, res) => {
   try {
-    const productos = await Producto.find();
-    res.json(productos);
+    const {
+      nombre,
+      minPrecio,
+      maxPrecio,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    let filtro = {};
+
+    // 🔍 Buscar por nombre
+    if (nombre) {
+      filtro.nombre = { $regex: nombre, $options: "i" };
+    }
+
+    // 💰 Filtro por precio
+    if (minPrecio || maxPrecio) {
+      filtro.precio = {};
+      if (minPrecio) filtro.precio.$gte = Number(minPrecio);
+      if (maxPrecio) filtro.precio.$lte = Number(maxPrecio);
+    }
+
+    const productos = await Producto.find(filtro)
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    const total = await Producto.countDocuments(filtro);
+
+    res.json({
+      total,
+      pagina: Number(page),
+      totalPaginas: Math.ceil(total / limit),
+      productos,
+    });
   } catch (error) {
-    res.status(500).json({ mensaje: "Error al obtener productos" });
+    res.status(500).json({ mensaje: "Error al obtener catálogo" });
   }
 });
 
-// Crear producto
+/* ======================
+      CREAR PRODUCTO
+====================== */
 app.post("/api/productos", async (req, res) => {
   try {
     const producto = new Producto(req.body);
@@ -69,7 +99,9 @@ app.post("/api/productos", async (req, res) => {
   }
 });
 
-// Reservar producto
+/* ======================
+      RESERVAR PRODUCTO
+====================== */
 app.put("/api/productos/:id/reservar", async (req, res) => {
   try {
     const producto = await Producto.findById(req.params.id);
@@ -84,6 +116,35 @@ app.put("/api/productos/:id/reservar", async (req, res) => {
     res.json(actualizado);
   } catch (error) {
     res.status(500).json({ mensaje: "Error al reservar producto" });
+  }
+});
+
+/* ======================
+      ELIMINAR PRODUCTO
+====================== */
+app.delete("/api/productos/:id", async (req, res) => {
+  try {
+    await Producto.findByIdAndDelete(req.params.id);
+    res.json({ mensaje: "Producto eliminado" });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al eliminar producto" });
+  }
+});
+
+/* ======================
+      ACTUALIZAR PRODUCTO
+====================== */
+app.put("/api/productos/:id", async (req, res) => {
+  try {
+    const actualizado = await Producto.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json(actualizado);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al actualizar producto" });
   }
 });
 

@@ -12,7 +12,7 @@ const SECRET = "mi_secreto";
 ========================= */
 router.post("/register", async (req, res) => {
   try {
-    let { nombre, email, password } = req.body;
+    let { nombre, email, password, rol } = req.body;
 
     if (!nombre || !email || !password) {
       return res.status(400).json({ msg: "Todos los campos son obligatorios" });
@@ -32,6 +32,7 @@ router.post("/register", async (req, res) => {
       nombre,
       email,
       password: hash,
+      rol // 👈 ahora sí se guarda el rol (o usa default del schema)
     });
 
     await user.save();
@@ -42,6 +43,7 @@ router.post("/register", async (req, res) => {
     res.status(500).json({ msg: "Error en registro", error: error.message });
   }
 });
+
 
 /* =========================
           LOGIN
@@ -69,7 +71,11 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { 
+        id: user._id, 
+        email: user.email,
+        rol: user.rol // 👈 importante para roles
+      },
       SECRET,
       { expiresIn: "1h" }
     );
@@ -79,13 +85,14 @@ router.post("/login", async (req, res) => {
       user: {
         id: user._id,
         nombre: user.nombre,
-        email: user.email
+        email: user.email,
+        rol: user.rol // 👈 ahora también lo envías al frontend
       }
     });
 
   } catch (error) {
     res.status(500).json({ msg: "Error en login", error: error.message });
-  } 
+  }
 });
 
 module.exports = router;
