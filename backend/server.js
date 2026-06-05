@@ -7,7 +7,8 @@ const Producto = require("./models/Producto");
 
 // Routes
 const authRoutes = require("./routes/auth");
-
+const swaggerUi = require("swagger-ui-express");
+const swaggerJsdoc = require("swagger-jsdoc");
 const app = express();
 
 /* ======================
@@ -20,6 +21,25 @@ const PORT = 5000;
 ====================== */
 app.use(cors());
 app.use(express.json());
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Marketplace Preventa API",
+      version: "1.0.0",
+      description: "Documentación API del Marketplace Preventa"
+    }
+  },
+  apis: ["./server.js"]
+};
+
+const specs = swaggerJsdoc(options);
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs)
+);
 
 /* ======================
       RUTAS AUTH
@@ -42,6 +62,15 @@ mongoose
 /* ======================
       RUTA BASE
 ====================== */
+/**
+ * @swagger
+ * /api:
+ *   get:
+ *     summary: Verifica que la API funciona
+ *     responses:
+ *       200:
+ *         description: API funcionando correctamente
+ */
 app.get("/api", (req, res) => {
   res.send("API funcionando 🚀");
 });
