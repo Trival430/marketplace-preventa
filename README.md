@@ -79,3 +79,6 @@ http://localhost:3000
 ## Autor
 
 Proyecto académico desarrollado para la asignatura Proyecto de Software.
+## Última actualización
+
+Proyecto actualizado para la entrega final.
