@@ -25,9 +25,9 @@ jobs:
       - name: Instalar dependencias backend
         run: |
           cd backend
-          npm install
+          npm ci || npm install
 
       - name: Ejecutar pruebas
         run: |
           cd backend
-          npm test
+          npx jest --coverage
