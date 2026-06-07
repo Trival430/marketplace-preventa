@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -7,39 +8,51 @@ const Producto = require("./models/Producto");
 
 // Routes
 const authRoutes = require("./routes/auth");
+
+// Swagger
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
+
 const app = express();
 
 /* ======================
-        PUERTO
+        PUERTO (RENDER FIX)
 ====================== */
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 /* ======================
       MIDDLEWARES
 ====================== */
 app.use(cors());
 app.use(express.json());
+
+/* ======================
+      SWAGGER CONFIG
+====================== */
 const options = {
   definition: {
     openapi: "3.0.0",
     info: {
       title: "Marketplace Preventa API",
       version: "1.0.0",
-      description: "Documentación API del Marketplace Preventa"
-    }
+      description: "Documentación API del Marketplace Preventa",
+    },
   },
-  apis: ["./server.js"]
+  apis: ["./server.js"],
 };
 
 const specs = swaggerJsdoc(options);
 
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(specs)
-);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+
+/* ======================
+      RUTA BASE (FIX ERROR /)
+====================== */
+app.get("/", (req, res) => {
+  res.json({
+    message: "API Marketplace Preventa funcionando 🚀",
+  });
+});
 
 /* ======================
       RUTAS AUTH
@@ -49,8 +62,7 @@ app.use("/api/auth", authRoutes);
 /* ======================
       MONGODB
 ====================== */
-const URI =
-  "mongodb+srv://admin:Admin123@cluster2.edeki7g.mongodb.net/marketplace?retryWrites=true&w=majority";
+const URI = process.env.MONGODB_URI;
 
 mongoose
   .connect(URI)
@@ -58,22 +70,6 @@ mongoose
   .catch((error) =>
     console.error("❌ Error de conexión:", error.message)
   );
-
-/* ======================
-      RUTA BASE
-====================== */
-/**
- * @swagger
- * /api:
- *   get:
- *     summary: Verifica que la API funciona
- *     responses:
- *       200:
- *         description: API funcionando correctamente
- */
-app.get("/api", (req, res) => {
-  res.send("API funcionando 🚀");
-});
 
 /* ======================
       CATÁLOGO PRODUCTOS
@@ -90,22 +86,15 @@ app.get("/api/productos", async (req, res) => {
 
     let filtro = {};
 
-    // Buscar por nombre
     if (nombre) {
       filtro.nombre = { $regex: nombre, $options: "i" };
     }
 
-    // Filtrar por precio
     if (minPrecio || maxPrecio) {
       filtro.precio = {};
 
-      if (minPrecio) {
-        filtro.precio.$gte = Number(minPrecio);
-      }
-
-      if (maxPrecio) {
-        filtro.precio.$lte = Number(maxPrecio);
-      }
+      if (minPrecio) filtro.precio.$gte = Number(minPrecio);
+      if (maxPrecio) filtro.precio.$lte = Number(maxPrecio);
     }
 
     const productos = await Producto.find(filtro)
@@ -120,7 +109,6 @@ app.get("/api/productos", async (req, res) => {
       totalPaginas: Math.ceil(total / limit),
       productos,
     });
-
   } catch (error) {
     res.status(500).json({
       mensaje: "Error al obtener catálogo",
@@ -134,11 +122,9 @@ app.get("/api/productos", async (req, res) => {
 app.post("/api/productos", async (req, res) => {
   try {
     const producto = new Producto(req.body);
-
     const guardado = await producto.save();
 
     res.status(201).json(guardado);
-
   } catch (error) {
     res.status(500).json({
       mensaje: "Error al crear producto",
@@ -164,28 +150,9 @@ app.put("/api/productos/:id/reservar", async (req, res) => {
     const actualizado = await producto.save();
 
     res.json(actualizado);
-
   } catch (error) {
     res.status(500).json({
       mensaje: "Error al reservar producto",
-    });
-  }
-});
-
-/* ======================
-      ELIMINAR PRODUCTO
-====================== */
-app.delete("/api/productos/:id", async (req, res) => {
-  try {
-    await Producto.findByIdAndDelete(req.params.id);
-
-    res.json({
-      mensaje: "Producto eliminado",
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al eliminar producto",
     });
   }
 });
@@ -202,7 +169,6 @@ app.put("/api/productos/:id", async (req, res) => {
     );
 
     res.json(actualizado);
-
   } catch (error) {
     res.status(500).json({
       mensaje: "Error al actualizar producto",
@@ -211,10 +177,25 @@ app.put("/api/productos/:id", async (req, res) => {
 });
 
 /* ======================
+      ELIMINAR PRODUCTO
+====================== */
+app.delete("/api/productos/:id", async (req, res) => {
+  try {
+    await Producto.findByIdAndDelete(req.params.id);
+
+    res.json({
+      mensaje: "Producto eliminado",
+    });
+  } catch (error) {
+    res.status(500).json({
+      mensaje: "Error al eliminar producto",
+    });
+  }
+});
+
+/* ======================
       SERVIDOR
 ====================== */
 app.listen(PORT, () => {
-  console.log(
-    `🚀 Servidor activo en http://localhost:${PORT}`
-  );
+  console.log(`🚀 Servidor activo en puerto ${PORT}`);
 });
