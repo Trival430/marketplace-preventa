@@ -608,36 +608,10 @@ function App() {
                  {/* BOTON ELIMINAR */}
 {rol === "vendedor" && (
   <button
-    onClick={async () => {
-
-      const confirmar = window.confirm(
-        "¿Seguro que deseas eliminar este producto?"
-      );
-
-      if (!confirmar) return;
-
-      try {
-
-        await fetch(`${API}/${p._id}`, {
-          method: "DELETE"
-        });
-
-        alert("Producto eliminado 🗑️");
-
-        cargarProductos();
-
-      } catch (error) {
-
-        console.log(error);
-
-        alert("Error al eliminar");
-
-      }
-
-    }}
+    onClick={() => eliminarProducto(p._id)}
     className="w-full mt-2 p-3 bg-red-500 hover:bg-red-600 text-white rounded-full font-bold transition-all"
   >
-    Eliminar producto 🗑️
+    Eliminar producto
   </button>
 )}
 
