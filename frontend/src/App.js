@@ -35,8 +35,8 @@ function App() {
 
   /* ================= API ================= */
 
-  const API = "http://localhost:5000/api/productos";
-  const AUTH_API = "http://localhost:5000/api/auth";
+const API = "/backend/api/productos";
+const AUTH_API = "/backend/api/auth";
 
   /* ================= PRODUCTOS ================= */
 
